@@ -1,0 +1,5 @@
+generated/nginx.conf
+generated/docker-compose.yml
+__pycache__/
+*.pyc
+.env
