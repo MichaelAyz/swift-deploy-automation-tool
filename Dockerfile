@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 FROM python:3.12-slim
 
 # Drop all Linux capabilities at build time via labels (enforced in compose)
