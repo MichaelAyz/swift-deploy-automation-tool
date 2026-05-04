@@ -1,34 +1,137 @@
 #!/usr/bin/env python3
 
 import sys
+import os
+import re
+import yaml
 
+# ── Paths ────────────────────────────────────────────────────────────────────
+ROOT         = os.path.dirname(os.path.abspath(__file__))
+MANIFEST     = os.path.join(ROOT, "manifest.yaml")
+TEMPLATES    = os.path.join(ROOT, "templates")
+GENERATED    = os.path.join(ROOT, "generated")
+NGINX_TMPL   = os.path.join(TEMPLATES, "nginx.conf.tmpl")
+COMPOSE_TMPL = os.path.join(TEMPLATES, "docker-compose.yml.tmpl")
+NGINX_OUT    = os.path.join(GENERATED, "nginx.conf")
+COMPOSE_OUT  = os.path.join(GENERATED, "docker-compose.yml")
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def load_manifest():
+    """Parse manifest.yaml and return the data dict."""
+    with open(MANIFEST, "r") as f:
+        return yaml.safe_load(f)
+
+
+def render_template(template_path, tokens):
+    """
+    Read a template file and replace all {{KEY}} placeholders
+    with values from the tokens dict.
+    Raises an error if any placeholder remains unreplaced after rendering.
+    """
+    with open(template_path, "r") as f:
+        content = f.read()
+
+    for key, value in tokens.items():
+        content = content.replace(f"{{{{{key}}}}}", str(value))
+
+    # Catch any placeholders we forgot to map
+    remaining = re.findall(r"\{\{[^}]+\}\}", content)
+    if remaining:
+        print(f"[error] Unreplaced placeholders in {template_path}: {remaining}")
+        sys.exit(1)
+
+    return content
+
+
+def write_file(path, content):
+    """Write content to path, creating directories if needed."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write(content)
+    print(f"[init] Written: {path}")
+
+
+def build_tokens(manifest):
+    """
+    Map every manifest field to its template placeholder name.
+    This is the single place where manifest fields meet template tokens —
+    if you add a field to the manifest, add it here.
+    """
+    svc = manifest["services"]
+    ngx = manifest["nginx"]
+    net = manifest["network"]
+
+    return {
+        "SERVICE_NAME":    svc["name"],
+        "SERVICE_IMAGE":   svc["image"],
+        "SERVICE_PORT":    svc["port"],
+        "MODE":            svc["mode"],
+        "APP_VERSION":     svc["version"],
+        "RESTART_POLICY":  svc["restart_policy"],
+        "LOG_VOLUME":      svc["log_volume"],
+        "NGINX_IMAGE":     ngx["image"],
+        "NGINX_PORT":      ngx["port"],
+        "PROXY_TIMEOUT":   ngx["proxy_timeout"],
+        "NETWORK_NAME":    net["name"],
+        "NETWORK_DRIVER":  net["driver_type"],
+    }
+
+
+# ── Subcommands ───────────────────────────────────────────────────────────────
 def cmd_init():
-    print("[init] Not yet implemented")
+    """
+    Parse manifest.yaml → render templates → write generated files.
+    This is intentionally kept pure: no Docker calls, no side effects
+    beyond writing two files. deploy() calls this first.
+    """
+    print("[init] Loading manifest...")
+    manifest = load_manifest()
+
+    print("[init] Building token map...")
+    tokens = build_tokens(manifest)
+
+    print("[init] Rendering nginx.conf...")
+    nginx_content = render_template(NGINX_TMPL, tokens)
+    write_file(NGINX_OUT, nginx_content)
+
+    print("[init] Rendering docker-compose.yml...")
+    compose_content = render_template(COMPOSE_TMPL, tokens)
+    write_file(COMPOSE_OUT, compose_content)
+
+    print("[init] Done. Generated files are in ./generated/")
+
 
 def cmd_validate():
     print("[validate] Not yet implemented")
 
+
 def cmd_deploy():
     print("[deploy] Not yet implemented")
+
 
 def cmd_promote(args):
     print("[promote] Not yet implemented")
 
+
 def cmd_teardown(args):
     print("[teardown] Not yet implemented")
+
 
 def usage():
     print("""
 Usage: ./swiftdeploy <subcommand> [options]
 
 Subcommands:
-  init                  Generate nginx.conf and docker-compose.yml from manifest
-  validate              Run pre-flight checks
-  deploy                Init + bring up stack + wait for health
+  init                     Generate nginx.conf and docker-compose.yml from manifest
+  validate                 Run pre-flight checks
+  deploy                   Init + bring up stack + wait for health
   promote [canary|stable]  Switch deployment mode
-  teardown [--clean]    Stop stack and remove containers/volumes
+  teardown [--clean]       Stop stack and remove containers/volumes
 """)
 
+
+# ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         usage()
