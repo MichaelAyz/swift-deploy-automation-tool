@@ -9,11 +9,10 @@ import yaml
 ROOT         = os.path.dirname(os.path.abspath(__file__))
 MANIFEST     = os.path.join(ROOT, "manifest.yaml")
 TEMPLATES    = os.path.join(ROOT, "templates")
-GENERATED    = os.path.join(ROOT, "generated")
 NGINX_TMPL   = os.path.join(TEMPLATES, "nginx.conf.tmpl")
 COMPOSE_TMPL = os.path.join(TEMPLATES, "docker-compose.yml.tmpl")
-NGINX_OUT    = os.path.join(GENERATED, "nginx.conf")
-COMPOSE_OUT  = os.path.join(GENERATED, "docker-compose.yml")
+NGINX_OUT    = os.path.join(ROOT, "nginx.conf")
+COMPOSE_OUT  = os.path.join(ROOT, "docker-compose.yml")
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -99,7 +98,7 @@ def cmd_init():
     compose_content = render_template(COMPOSE_TMPL, tokens)
     write_file(COMPOSE_OUT, compose_content)
 
-    print("[init] Done. Generated files are in ./generated/")
+    print("[init] Done. Generated files are in ./")
 
 def cmd_validate():
     """
@@ -207,7 +206,7 @@ def cmd_validate():
     # ── Check 5: Generated nginx.conf is syntactically valid ─────────────────
     if not os.path.exists(NGINX_OUT):
         check("nginx.conf syntax is valid", False,
-              "generated/nginx.conf not found — run ./swiftdeploy init first")
+              "nginx.conf not found — run ./swiftdeploy init first")
     else:
         nginx_errors = []
         with open(NGINX_OUT, "r") as f:
@@ -284,7 +283,7 @@ def cmd_deploy():
         ["docker", "compose",
          "-f", compose_file,
          "up", "-d", "--remove-orphans"],
-        cwd=GENERATED
+        cwd=ROOT
     )
     if result.returncode != 0:
         print("[deploy] ERROR: docker compose up failed.")
@@ -319,7 +318,7 @@ def cmd_deploy():
 
     if not healthy:
         print(f"[deploy] ERROR: Stack did not become healthy within {timeout}s.")
-        print("[deploy] Check logs with: docker compose -f generated/docker-compose.yml logs")
+        print("[deploy] Check logs with: docker compose -f docker-compose.yml logs")
         sys.exit(1)
 
     print()
@@ -404,7 +403,7 @@ def cmd_promote(args):
          "--no-deps",
          "--force-recreate",
          "app"],
-        cwd=GENERATED
+        cwd=ROOT
     )
 
     if result.returncode != 0:
@@ -473,7 +472,7 @@ def cmd_teardown(args):
     print("[teardown] Stopping stack...")
 
     if not os.path.exists(compose_file):
-        print("[teardown] WARNING: generated/docker-compose.yml not found.")
+        print("[teardown] WARNING: docker-compose.yml not found.")
         print("[teardown] Attempting teardown by container name directly...")
 
         # Fallback: stop and remove by known container names
@@ -496,7 +495,7 @@ def cmd_teardown(args):
             ["docker", "compose",
              "-f", compose_file,
              "down", "--volumes", "--remove-orphans"],
-            cwd=GENERATED
+            cwd=ROOT
         )
         if result.returncode != 0:
             print("[teardown] WARNING: docker compose down reported errors.")
