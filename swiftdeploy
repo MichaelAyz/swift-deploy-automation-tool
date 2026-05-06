@@ -60,6 +60,7 @@ def build_tokens(manifest):
     svc = manifest["services"]
     ngx = manifest["nginx"]
     net = manifest["network"]
+    opa = manifest["opa"]
 
     return {
         "SERVICE_NAME":    svc["name"],
@@ -74,6 +75,8 @@ def build_tokens(manifest):
         "PROXY_TIMEOUT":   ngx["proxy_timeout"],
         "NETWORK_NAME":    net["name"],
         "NETWORK_DRIVER":  net["driver_type"],
+        "OPA_IMAGE":       opa["image"],
+        "OPA_PORT":        opa["port"],
     }
 
 
@@ -153,6 +156,8 @@ def cmd_validate():
         "nginx.proxy_timeout":   ["nginx", "proxy_timeout"],
         "network.name":          ["network", "name"],
         "network.driver_type":   ["network", "driver_type"],
+        "opa.image":             ["opa", "image"],
+        "opa.port":              ["opa", "port"],
     }
 
     missing = []
