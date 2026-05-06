@@ -62,7 +62,9 @@ services:
       - "--server"
       - "--addr=0.0.0.0:{{OPA_PORT}}"
       - "--log-level=info"
-      - "/policies"
+      - "/policies/infra.rego"
+      - "/policies/canary.rego"
+      - "/policies/data.json"
     volumes:
       - ./policies:/policies:ro
     networks:
