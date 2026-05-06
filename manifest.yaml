@@ -12,6 +12,10 @@ nginx:
   port: 8080
   proxy_timeout: 30
 
+opa:
+  image: openpolicyagent/opa:latest
+  port: 8181
+
 network:
   name: swiftdeploy-net
   driver_type: bridge

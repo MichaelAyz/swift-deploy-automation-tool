@@ -53,6 +53,29 @@ services:
       app:
         condition: service_healthy
 
+  opa:
+    image: {{OPA_IMAGE}}
+    container_name: swiftdeploy-opa
+    restart: {{RESTART_POLICY}}
+    command:
+      - "run"
+      - "--server"
+      - "--addr=0.0.0.0:{{OPA_PORT}}"
+      - "--log-level=info"
+      - "/policies"
+    volumes:
+      - ./policies:/policies:ro
+    networks:
+      - {{NETWORK_NAME}}
+    expose:
+      - "{{OPA_PORT}}"
+    ports:
+      - "127.0.0.1:{{OPA_PORT}}:{{OPA_PORT}}"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
 networks:
   {{NETWORK_NAME}}:
     driver: {{NETWORK_DRIVER}}
