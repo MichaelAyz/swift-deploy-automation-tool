@@ -3,6 +3,5 @@ docker-compose.yml
 __pycache__/
 *.pyc
 .env
-task 4a.md
 .gitignore
 
