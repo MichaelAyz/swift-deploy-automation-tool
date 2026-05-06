@@ -11,18 +11,18 @@ allow if {
 
 # Collect all violations as a set of reason strings
 violations contains reason if {
-    input.disk_free_gb < data.infra.min_disk_free_gb
+    input.disk_free_gb < data.thresholds.infra.min_disk_free_gb
     reason := sprintf(
         "disk free %.1fGB is below minimum %.1fGB",
-        [input.disk_free_gb, data.infra.min_disk_free_gb]
+        [input.disk_free_gb, data.thresholds.infra.min_disk_free_gb]
     )
 }
 
 violations contains reason if {
-    input.cpu_load > data.infra.max_cpu_load
+    input.cpu_load > data.thresholds.infra.max_cpu_load
     reason := sprintf(
         "CPU load %.2f exceeds maximum %.2f",
-        [input.cpu_load, data.infra.max_cpu_load]
+        [input.cpu_load, data.thresholds.infra.max_cpu_load]
     )
 }
 

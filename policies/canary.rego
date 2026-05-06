@@ -11,18 +11,18 @@ allow if {
 
 # Collect all violations as a set of reason strings
 violations contains reason if {
-    input.error_rate_pct > data.canary.max_error_rate_pct
+    input.error_rate_pct > data.thresholds.canary.max_error_rate_pct
     reason := sprintf(
         "error rate %.2f%% exceeds maximum %.2f%%",
-        [input.error_rate_pct, data.canary.max_error_rate_pct]
+        [input.error_rate_pct, data.thresholds.canary.max_error_rate_pct]
     )
 }
 
 violations contains reason if {
-    input.p99_latency_ms > data.canary.max_p99_latency_ms
+    input.p99_latency_ms > data.thresholds.canary.max_p99_latency_ms
     reason := sprintf(
         "P99 latency %.1fms exceeds maximum %dms",
-        [input.p99_latency_ms, data.canary.max_p99_latency_ms]
+        [input.p99_latency_ms, data.thresholds.canary.max_p99_latency_ms]
     )
 }
 
