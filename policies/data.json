@@ -1,0 +1,10 @@
+{
+  "infra": {
+    "min_disk_free_gb": 10,
+    "max_cpu_load": 2.0
+  },
+  "canary": {
+    "max_error_rate_pct": 1.0,
+    "max_p99_latency_ms": 500
+  }
+}
